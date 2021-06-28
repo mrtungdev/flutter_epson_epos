@@ -1,5 +1,5 @@
 name: epson_epos
-description: A new flutter plugin project.
+description: Epson ePOS SDK for Flutter
 version: 0.0.1
 homepage:
 
@@ -27,7 +27,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.tlt.flutter_epson_epos.epson_epos
+        package: com.tlt.epson_epos
         pluginClass: EpsonEposPlugin
       ios:
         pluginClass: EpsonEposPlugin

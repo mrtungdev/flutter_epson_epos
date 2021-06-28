@@ -1,4 +1,4 @@
-package com.tlt.flutter_epson_epos.epson_epos_example
+package com.tlt.epson_epos_example
 
 import io.flutter.embedding.android.FlutterActivity
 

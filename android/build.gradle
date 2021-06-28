@@ -1,4 +1,4 @@
-group 'com.tlt.flutter_epson_epos.epson_epos'
+group 'com.tlt.epson_epos'
 version '1.0-SNAPSHOT'
 
 buildscript {

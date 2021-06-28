@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tlt.flutter_epson_epos.epson_epos_example">
+    package="com.tlt.epson_epos_example">
    <application
         android:label="epson_epos_example"
         android:icon="@mipmap/ic_launcher">

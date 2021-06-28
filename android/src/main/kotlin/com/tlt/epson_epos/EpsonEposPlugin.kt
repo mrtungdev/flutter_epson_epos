@@ -1,4 +1,4 @@
-package com.tlt.flutter_epson_epos.epson_epos
+package com.tlt.epson_epos
 
 import androidx.annotation.NonNull
 
