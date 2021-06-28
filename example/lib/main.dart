@@ -28,10 +28,9 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      platformVersion =
-          await EpsonEpos.platformVersion ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+      platformVersion = (await EpsonEpos.platformVersion)!;
+    } on PlatformException catch (e) {
+      platformVersion = e.message!;
     }
 
     // If the widget was removed from the tree while the asynchronous platform
