@@ -2,8 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:epson_epos/epson_epos.dart';
 
 void main() {
@@ -43,12 +41,21 @@ class _MyAppState extends State<MyApp> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Text('Please select below example'),
+                TextButton(
+                    onPressed: onDiscoveryTCP, child: Text('Discovery TCP'))
               ],
             ),
           ),
         )),
       ),
     );
+  }
+
+  onDiscoveryTCP() async {
+    try {
+      final data = await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
+    } catch (e) {
+      log("Error: " + e.toString());
+    }
   }
 }
