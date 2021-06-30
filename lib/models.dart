@@ -4,17 +4,18 @@ import 'dart:convert';
  * Star Micronics Printer Model
  */
 class EpsonPrinterModel {
-  EpsonPrinterModel(
-      {required this.address, required this.portName, this.model});
+  EpsonPrinterModel({required this.address, this.portName, this.model});
 
   String address;
-  String portName;
+  String? portName;
   String? model;
 
   EpsonPrinterModel copyWith(
-          {required String address, required String portName, String? model}) =>
+          {required String address, String? portName, String? model}) =>
       EpsonPrinterModel(
-          address: address, portName: portName, model: model ?? this.model);
+          address: address,
+          portName: portName ?? this.portName,
+          model: model ?? this.model);
 
   factory EpsonPrinterModel.fromRawJson(String str) =>
       EpsonPrinterModel.fromJson(json.decode(str));
@@ -29,7 +30,7 @@ class EpsonPrinterModel {
 
   Map<String, dynamic> toJson() => {
         "address": address,
-        "portName": portName,
+        "portName": portName == null ? null : portName,
         "model": model == null ? null : model
       };
 }
@@ -38,25 +39,25 @@ class EpsonPrinterResponse {
   EpsonPrinterResponse({
     required this.type,
     required this.success,
-    required this.message,
+    this.message,
     this.content,
   });
 
   String type;
   bool success;
-  String message;
+  String? message;
   dynamic content;
 
   EpsonPrinterResponse copyWith({
     required String type,
     required bool success,
-    required String message,
+    String? message,
     dynamic content,
   }) =>
       EpsonPrinterResponse(
         type: type,
         success: success,
-        message: message,
+        message: message ?? this.message,
         content: content ?? this.content,
       );
 
@@ -76,7 +77,7 @@ class EpsonPrinterResponse {
   Map<String, dynamic> toJson() => {
         "type": type,
         "success": success,
-        "message": message,
+        "message": message == null ? null : message,
         "content": content == null ? null : content,
       };
 }

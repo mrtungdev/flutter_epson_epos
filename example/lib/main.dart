@@ -53,7 +53,9 @@ class _MyAppState extends State<MyApp> {
 
   onDiscoveryTCP() async {
     try {
-      final data = await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
+      List<EpsonPrinterModel>? data =
+          await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
+      print(data);
     } catch (e) {
       log("Error: " + e.toString());
     }

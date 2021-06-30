@@ -39,8 +39,8 @@ class EpsonEposPrinterInfo(
 ) : JSONConvertable
 
 data class EpsonEposPrinterResult(
-  var type: String? = null,
-  var success: Boolean? = null,
+  var type: String,
+  var success: Boolean,
   var message: String? = null,
   var content: Any? = null
 ) : JSONConvertable
@@ -81,7 +81,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull rawResult: Result) {
-    val result: MethodResultWrapper = MethodResultWrapper(rawResult)
+    val result = MethodResultWrapper(rawResult)
     Thread(MethodRunner(call, result)).start()
   }
 
@@ -131,6 +131,9 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     }
   }
 
+  /**
+   * Stop discovery printer
+   */
   private fun stopDiscovery() {
     try {
       Discovery.stop()
@@ -141,8 +144,10 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     }
   }
 
+  /**
+   * Discovery printers
+   */
   private fun onDiscovery(@NonNull call: MethodCall, @NonNull result: Result) {
-    Log.d(logTag, "onDiscovery $call $result")
     val printType: String = call.argument<String>("type") as String
     Log.d(logTag, "onDiscovery type: $printType")
     when (printType) {
@@ -153,11 +158,12 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     }
   }
 
+
   private fun onDiscoveryTCP(@NonNull call: MethodCall, @NonNull result: Result) {
     printers.clear()
     var filter = FilterOption()
-    filter.portType = Discovery.PORTTYPE_TCP;
-    var resp = EpsonEposPrinterResult()
+    filter.portType = Discovery.PORTTYPE_TCP
+    var resp = EpsonEposPrinterResult("onDiscoveryTCP", false)
     try {
       Discovery.start(context, filter, mDiscoveryListener)
       Handler(Looper.getMainLooper()).postDelayed({
@@ -187,7 +193,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 
   private val mDiscoveryListener =
     DiscoveryListener { deviceInfo ->
-      Log.d(logTag, deviceInfo.deviceName)
+      Log.d(logTag, "Found: ${deviceInfo?.deviceName}")
       var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress, deviceInfo.deviceName)
       printers.add(printer)
     }
