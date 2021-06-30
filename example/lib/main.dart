@@ -40,10 +40,7 @@ class _MyAppState extends State<MyApp> {
           padding: const EdgeInsets.all(24.0),
           child: SingleChildScrollView(
             child: Column(
-              children: [
-                TextButton(
-                    onPressed: onDiscoveryTCP, child: Text('Discovery TCP'))
-              ],
+              children: [TextButton(onPressed: onDiscoveryTCP, child: Text('Discovery TCP'))],
             ),
           ),
         )),
@@ -53,9 +50,11 @@ class _MyAppState extends State<MyApp> {
 
   onDiscoveryTCP() async {
     try {
-      List<EpsonPrinterModel>? data =
-          await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
-      print(data);
+      List<EpsonPrinterModel>? data = await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
+      if (data != null && data.length > 0)
+        data.forEach((element) {
+          print(element.toJson());
+        });
     } catch (e) {
       log("Error: " + e.toString());
     }

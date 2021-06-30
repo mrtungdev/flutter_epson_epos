@@ -16,14 +16,12 @@ class EpsonEPOS {
   static bool _isPrinterPlatformSupport({bool throwError = false}) {
     if (Platform.isAndroid) return true;
     if (throwError) {
-      throw PlatformException(
-          code: "platformNotSupported", message: "Device not supported");
+      throw PlatformException(code: "platformNotSupported", message: "Device not supported");
     }
     return false;
   }
 
-  static Future<List<EpsonPrinterModel>?> onDiscovery(
-      {EpsonEPOSPortType type = EpsonEPOSPortType.ALL}) async {
+  static Future<List<EpsonPrinterModel>?> onDiscovery({EpsonEPOSPortType type = EpsonEPOSPortType.ALL}) async {
     if (!_isPrinterPlatformSupport(throwError: true)) return null;
     String printType = _eposHelper.getPortType(type);
     final Map<String, dynamic> params = {"type": printType};
@@ -33,12 +31,11 @@ class EpsonEPOS {
         final response = EpsonPrinterResponse.fromRawJson(rep);
         List<dynamic> prs = response.content;
         if (prs.length > 0) {
-          return prs
-              .map((e) => EpsonPrinterModel(
-                  address: e['address'],
-                  portName: e['macAddress'],
-                  model: e['model']))
-              .toList();
+          return prs.map((e) {
+            final modelName = e['model'];
+            final modelSeries = _eposHelper.getSeries(modelName);
+            return EpsonPrinterModel(address: e['address'], type: printType, model: modelName, series: modelSeries?.id);
+          }).toList();
         }
       } catch (e) {
         throw e;
