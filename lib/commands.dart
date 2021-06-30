@@ -10,10 +10,16 @@ class StarMicronicsCommand {
   }
 
   Map<String, dynamic> append(dynamic data) {
-    return {"id": "append", "value": data};
+    return {"id": "appendText", "value": data};
   }
 
-  Map<String, dynamic> appendRaw(dynamic data) {
-    return {"id": "appendRaw", "value": data};
+  Map<String, dynamic> appendBitmap(dynamic data, int width, int height, int posX, int posY) {
+    Map<String, dynamic> cmd = {"id": "addImage", "value": data};
+    cmd['width'] = width;
+    cmd['height'] = height;
+    cmd['posX'] = posX;
+    cmd['posY'] = posY;
+
+    return cmd;
   }
 }

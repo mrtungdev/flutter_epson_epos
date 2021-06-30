@@ -220,7 +220,6 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         resp.success = false
         resp.message = "Can not connect to the printer."
         result.success(resp.toJSON())
-        disconnectPrinter()
       } else{
         commands.forEach {
           onGenerateCommand(call, it)
@@ -228,8 +227,6 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         try {
           mPrinter!!.sendData(Printer.PARAM_DEFAULT)
         } catch (e: Exception) {
-          mPrinter!!.clearCommandBuffer()
-          disconnectPrinter()
         }
       }
     } catch (e: Exception) {
@@ -238,7 +235,8 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       resp.message = "Print error"
       result.success(resp.toJSON())
     } finally {
-
+      Log.d(logTag, "onPrint Finally")
+      disconnectPrinter()
     }
   }
 
@@ -283,24 +281,27 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       return
     }
     Log.d(logTag, "onGenerateCommand: $command")
-    val textData = StringBuilder()
+//    val textData = StringBuilder()
 
     var commandId: String = command["id"] as String
     if (!commandId.isNullOrEmpty()) {
       var commandValue = command["value"]
 
       when (commandId) {
+
+        "appendText" -> {
+          Log.d(logTag, "appendText: $commandValue")
+          mPrinter!!.addText(commandValue as String);
+        }
         "addImage" -> {
-
           try {
-            var width = command["width"] as Int
-            var height = command["height"] as Int
-            Log.d(logTag, "appendBitmap: $width x $height")
-            var diffusion = command["diffusion"] as? Boolean
-
+            var width: Int = command["width"] as Int
+            var height: Int = command["height"] as Int
+            var posX: Int = command["posX"] as Int
+            var posY: Int = command["posY"] as Int
             val bitmap: Bitmap? = convertBase64toBitmap(commandValue as String)
-            Log.d(logTag, "appendBitmap: bitmap $bitmap")
-            mPrinter!!.addImage(bitmap, 0, 0, width, height, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, 1.0, Printer.COMPRESS_AUTO)
+            Log.d(logTag, "appendBitmap: $width x $height $posX $posY bitmap $bitmap")
+            mPrinter!!.addImage(bitmap, posX, posY, width, height, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, 1.0, Printer.COMPRESS_AUTO)
           } catch (e: Exception) {
 
           }
