@@ -43,4 +43,9 @@ class EpsonEPOS {
     }
     return [];
   }
+
+  static Future<dynamic> onPrint(EpsonPrinterModel printer, List<Map<String, dynamic>> commands) async {
+    final Map<String, dynamic> params = {"address": printer.address, "type": printer.type, "series": printer.series, "commands": commands};
+    return await _channel.invokeMethod('onPrint', params);
+  }
 }

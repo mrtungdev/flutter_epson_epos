@@ -3,6 +3,8 @@ package com.tlt.epson_epos
 import android.app.Activity
 import androidx.annotation.NonNull
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -13,6 +15,10 @@ import com.epson.epos2.discovery.DeviceInfo;
 import com.epson.epos2.discovery.Discovery;
 import com.epson.epos2.discovery.DiscoveryListener;
 import com.epson.epos2.discovery.FilterOption;
+import com.epson.epos2.printer.Printer;
+import com.epson.epos2.printer.PrinterStatusInfo;
+import com.epson.epos2.printer.ReceiveListener;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -21,9 +27,11 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import java.lang.Exception
+import java.lang.StringBuilder
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
+import android.util.Base64
 
 interface JSONConvertable {
   fun toJSON(): String = Gson().toJson(this)
@@ -34,8 +42,8 @@ inline fun <reified T : JSONConvertable> String.toObject(): T = Gson().fromJson(
 class EpsonEposPrinterInfo(
   var address: String? = null,
   var model: String? = null,
-  var macAddress: String? = null,
-  var portName: String? = null
+  var type: String? = null,
+  var printType: String? = null
 ) : JSONConvertable
 
 data class EpsonEposPrinterResult(
@@ -55,6 +63,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private var logTag: String = "Epson_ePOS"
   private lateinit var context: Context
   private lateinit var activity: Activity
+  private var mPrinter: Printer? = null
   private var printers: MutableList<Any> = ArrayList()
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -98,6 +107,9 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       when (call.method) {
         "onDiscovery" -> {
           onDiscovery(call, result)
+        }
+        "onPrint" -> {
+          onPrint(call, result)
         }
         "onGetPrinterInfo" -> {
           onGetPrinterInfo(call, result)
@@ -151,14 +163,16 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     val printType: String = call.argument<String>("type") as String
     Log.d(logTag, "onDiscovery type: $printType")
     when (printType) {
-      "tcp" -> {
+      "TCP" -> {
         onDiscoveryTCP(call, result)
       }
       else -> result.notImplemented()
     }
   }
 
-
+  /**
+   * Discovery Printers via TCP/IP
+   */
   private fun onDiscoveryTCP(@NonNull call: MethodCall, @NonNull result: Result) {
     printers.clear()
     var filter = FilterOption()
@@ -191,10 +205,143 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     Log.d(logTag, "isPrinterConnected $call $result")
   }
 
-  private val mDiscoveryListener =
-    DiscoveryListener { deviceInfo ->
+  /**
+   * Print
+   */
+  private fun onPrint(@NonNull call: MethodCall, @NonNull result: Result) {
+    val address: String = call.argument<String>("address") as String
+    val type: String = call.argument<String>("type") as String
+    val series: String = call.argument<String>("series") as String
+    val commands: ArrayList<Map<String, Any>> = call.argument<ArrayList<Map<String, Any>>>("commands") as ArrayList<Map<String, Any>>
+    var target = "${type}:${address}"
+    var resp = EpsonEposPrinterResult("onPrint${type}", false)
+    try {
+      if(!connectPrinter(target, series)){
+        resp.success = false
+        resp.message = "Can not connect to the printer."
+        result.success(resp.toJSON())
+        disconnectPrinter()
+      } else{
+        commands.forEach {
+          onGenerateCommand(call, it)
+        }
+        try {
+          mPrinter!!.sendData(Printer.PARAM_DEFAULT)
+        } catch (e: Exception) {
+          mPrinter!!.clearCommandBuffer()
+          disconnectPrinter()
+        }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      resp.success = false
+      resp.message = "Print error"
+      result.success(resp.toJSON())
+    } finally {
+
+    }
+  }
+
+
+  /// FUNCTIONS
+
+  private val mDiscoveryListener = DiscoveryListener { deviceInfo ->
       Log.d(logTag, "Found: ${deviceInfo?.deviceName}")
       var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress, deviceInfo.deviceName)
       printers.add(printer)
+  }
+
+  private fun connectPrinter(target: String, series: String): Boolean{
+    var printCons = getPrinterConstant(series)
+    mPrinter = Printer(printCons, 0, context);
+    try {
+      mPrinter!!.connect(target, Printer.PARAM_DEFAULT)
+    } catch (e: Exception) {
+      return false
     }
+    return true
+  }
+
+  private fun disconnectPrinter() {
+    if (mPrinter == null) {
+      return
+    }
+    while (true) {
+      try {
+        mPrinter!!.disconnect()
+        break
+      } catch (e: Exception) {
+        mPrinter!!.clearCommandBuffer()
+       throw e
+      }
+    }
+    mPrinter!!.clearCommandBuffer()
+  }
+
+  private fun onGenerateCommand(call: MethodCall, command: Map<String, Any>) {
+    if (mPrinter == null) {
+      return
+    }
+    Log.d(logTag, "onGenerateCommand: $command")
+    val textData = StringBuilder()
+
+    var commandId: String = command["id"] as String
+    if (!commandId.isNullOrEmpty()) {
+      var commandValue = command["value"]
+
+      when (commandId) {
+        "addImage" -> {
+
+          try {
+            var width = command["width"] as Int
+            var height = command["height"] as Int
+            Log.d(logTag, "appendBitmap: $width x $height")
+            var diffusion = command["diffusion"] as? Boolean
+
+            val bitmap: Bitmap? = convertBase64toBitmap(commandValue as String)
+            Log.d(logTag, "appendBitmap: bitmap $bitmap")
+            mPrinter!!.addImage(bitmap, 0, 0, width, height, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, 1.0, Printer.COMPRESS_AUTO)
+          } catch (e: Exception) {
+
+          }
+
+        }
+      }
+    }
+
+
+  }
+
+  private fun getPrinterConstant(series: String): Int{
+    return when(series){
+      "TM_M10" -> Printer.TM_M10
+      "TM_M30" -> Printer.TM_M30
+      "TM_M30II" -> Printer.TM_M30II
+      "TM_M50" -> Printer.TM_M50
+      "TM_P20" -> Printer.TM_P20
+      "TM_P60" -> Printer.TM_P60
+      "TM_P60II" -> Printer.TM_P60II
+      "TM_P80" -> Printer.TM_P80
+      "TM_T20" -> Printer.TM_T20
+      "TM_T60" -> Printer.TM_T60
+      "TM_T70" -> Printer.TM_T70
+      "TM_T81" -> Printer.TM_T81
+      "TM_T82" -> Printer.TM_T82
+      "TM_T83" -> Printer.TM_T83
+      "TM_T83III" -> Printer.TM_T83III
+      "TM_T88" -> Printer.TM_T88
+      "TM_T90" -> Printer.TM_T90
+      "TM_T100" -> Printer.TM_T100
+      "TM_U220" -> Printer.TM_U220
+      "TM_U330" -> Printer.TM_U330
+      "TM_L90" -> Printer.TM_L90
+      "TM_H6000" -> Printer.TM_H6000
+      else -> 0
+    }
+  }
+
+  private fun convertBase64toBitmap(base64Str: String): Bitmap? {
+    val decodedBytes: ByteArray = Base64.decode(base64Str, Base64.DEFAULT)
+    return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+  }
 }
