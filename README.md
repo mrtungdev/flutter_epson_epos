@@ -1,3 +1,5 @@
+[![pub package](https://img.shields.io/pub/v/epson_epos.svg)](https://pub.dev/packages/epson_epos)
+
 # [WIP] Flutter Epson ePOS SDK
 
 This plugin allows Flutter apps to discover printers and send data to EPSON ePOS.
