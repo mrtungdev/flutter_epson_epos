@@ -14,6 +14,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  List<EpsonPrinterModel> printers = [];
+
   @override
   void initState() {
     super.initState();
@@ -38,9 +40,33 @@ class _MyAppState extends State<MyApp> {
         body: SafeArea(
             child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: SingleChildScrollView(
+          child: Expanded(
             child: Column(
-              children: [TextButton(onPressed: onDiscoveryTCP, child: Text('Discovery TCP'))],
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextButton(onPressed: onDiscoveryTCP, child: Text('Discovery TCP')),
+                Flexible(
+                    child: ListView.builder(
+                  itemBuilder: (BuildContext context, int index) {
+                    final printer = printers[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.all(0),
+                      title: Text('${printer.model} | ${printer.series}'),
+                      subtitle: Text('${printer.address}'),
+                      trailing: TextButton(
+                          onPressed: () {
+                            onPrintTest(printer);
+                          },
+                          child: Text('Print Test')),
+                    );
+                  },
+                  itemCount: printers.length,
+                  primary: false,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                ))
+              ],
             ),
           ),
         )),
@@ -48,15 +74,29 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  buildPrinter() {}
+
   onDiscoveryTCP() async {
     try {
       List<EpsonPrinterModel>? data = await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
-      if (data != null && data.length > 0)
+      if (data != null && data.length > 0) {
         data.forEach((element) {
           print(element.toJson());
         });
+        setState(() {
+          printers = data;
+        });
+      }
     } catch (e) {
       log("Error: " + e.toString());
     }
+  }
+
+  void onPrintTest(EpsonPrinterModel printer) async {
+    EpsonEPOSCommand command = EpsonEPOSCommand();
+    List<Map<String, dynamic>> commands = [];
+    final cTest = command.append('Eat.chat Point of Sales');
+    commands.add(cTest);
+    await EpsonEPOS.onPrint(printer, commands);
   }
 }

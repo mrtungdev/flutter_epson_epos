@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.epson.epos2.Log as PrintLog;
 import com.google.gson.Gson
 import com.epson.epos2.Epos2Exception;
 //import com.epson.epos2.Log;
@@ -86,7 +87,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "epson_epos")
     channel.setMethodCallHandler(this)
     context = flutterPluginBinding.applicationContext
-    Log.d(logTag, "Attached")
+    PrintLog.setLogSettings(context, PrintLog.PERIOD_TEMPORARY, PrintLog.OUTPUT_STORAGE, null, 0, 1, PrintLog.LOGLEVEL_LOW);
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull rawResult: Result) {
@@ -225,8 +226,16 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
           onGenerateCommand(call, it)
         }
         try {
+          val statusInfo: PrinterStatusInfo? = mPrinter!!.status;
+          Log.d(logTag, "Printing $target $series Connection: ${statusInfo?.connection} online: ${statusInfo?.online} cover: ${statusInfo?.coverOpen} Paper: ${statusInfo?.paper} ErrorSt: ${statusInfo?.errorStatus} Battery Level: ${statusInfo?.batteryLevel}")
+//          mPrinter!!.addCut(Printer.CUT_FEED)
           mPrinter!!.sendData(Printer.PARAM_DEFAULT)
-        } catch (e: Exception) {
+          Log.d(logTag, "Printed $target $series")
+          disconnectPrinter()
+        } catch (ex: Exception) {
+          ex.printStackTrace()
+          Log.e(logTag, "sendData Error" + ex.localizedMessage)
+          disconnectPrinter()
         }
       }
     } catch (e: Exception) {
@@ -234,9 +243,6 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       resp.success = false
       resp.message = "Print error"
       result.success(resp.toJSON())
-    } finally {
-      Log.d(logTag, "onPrint Finally")
-      disconnectPrinter()
     }
   }
 
@@ -252,9 +258,11 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private fun connectPrinter(target: String, series: String): Boolean{
     var printCons = getPrinterConstant(series)
     mPrinter = Printer(printCons, 0, context);
+    Log.d(logTag, "Connect Printer w $series constant: $printCons")
     try {
       mPrinter!!.connect(target, Printer.PARAM_DEFAULT)
     } catch (e: Exception) {
+      Log.e(logTag, "Connect Error ${e.localizedMessage}", e)
       return false
     }
     return true
@@ -291,7 +299,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 
         "appendText" -> {
           Log.d(logTag, "appendText: $commandValue")
-          mPrinter!!.addText(commandValue as String);
+          mPrinter!!.addText(commandValue.toString());
         }
         "addImage" -> {
           try {
@@ -303,14 +311,12 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
             Log.d(logTag, "appendBitmap: $width x $height $posX $posY bitmap $bitmap")
             mPrinter!!.addImage(bitmap, posX, posY, width, height, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, Printer.PARAM_DEFAULT, 1.0, Printer.COMPRESS_AUTO)
           } catch (e: Exception) {
-
+            Log.e(logTag, "onGenerateCommand Error" + e.localizedMessage)
           }
 
         }
       }
     }
-
-
   }
 
   private fun getPrinterConstant(series: String): Int{
