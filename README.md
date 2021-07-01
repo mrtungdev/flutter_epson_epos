@@ -78,6 +78,10 @@ Coming soon!
     - [ ]  Print Function
         - [x]  addText
         - [x]  addImage
+        - [x]  addFeedLine
+        - [x]  addLineSpace
+        - [x]  addCut
+        - [x]  addTextAlign
 - iOS
 
     Not support yet

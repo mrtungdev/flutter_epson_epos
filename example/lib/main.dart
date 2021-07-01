@@ -45,7 +45,8 @@ class _MyAppState extends State<MyApp> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextButton(onPressed: onDiscoveryTCP, child: Text('Discovery TCP')),
+                TextButton(
+                    onPressed: onDiscoveryTCP, child: Text('Discovery TCP')),
                 Flexible(
                     child: ListView.builder(
                   itemBuilder: (BuildContext context, int index) {
@@ -78,7 +79,8 @@ class _MyAppState extends State<MyApp> {
 
   onDiscoveryTCP() async {
     try {
-      List<EpsonPrinterModel>? data = await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
+      List<EpsonPrinterModel>? data =
+          await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
       if (data != null && data.length > 0) {
         data.forEach((element) {
           print(element.toJson());

@@ -4,7 +4,8 @@ import 'dart:convert';
 /// Printer Model
 ///
 class EpsonPrinterModel {
-  EpsonPrinterModel({required this.address, this.type, this.model, this.series});
+  EpsonPrinterModel(
+      {required this.address, this.type, this.model, this.series});
 
   /// Connectivity type: TCP | BT | USB
   String? type;
@@ -14,17 +15,31 @@ class EpsonPrinterModel {
   String? model;
   String? series;
 
-  EpsonPrinterModel copyWith({required String address, String? type, String? model, String? series}) =>
-      EpsonPrinterModel(address: address, type: type ?? this.type, model: model ?? this.model, series: series ?? this.series);
+  EpsonPrinterModel copyWith(
+          {required String address,
+          String? type,
+          String? model,
+          String? series}) =>
+      EpsonPrinterModel(
+          address: address,
+          type: type ?? this.type,
+          model: model ?? this.model,
+          series: series ?? this.series);
 
-  factory EpsonPrinterModel.fromRawJson(String str) => EpsonPrinterModel.fromJson(json.decode(str));
+  factory EpsonPrinterModel.fromRawJson(String str) =>
+      EpsonPrinterModel.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
   factory EpsonPrinterModel.fromJson(Map<String, dynamic> json) =>
-      EpsonPrinterModel(address: json["address"], type: json["type"], model: json["model"], series: json["series"]);
+      EpsonPrinterModel(
+          address: json["address"],
+          type: json["type"],
+          model: json["model"],
+          series: json["series"]);
 
-  Map<String, dynamic> toJson() => {"address": address, "type": type, "model": model, "series": series};
+  Map<String, dynamic> toJson() =>
+      {"address": address, "type": type, "model": model, "series": series};
 
   @override
   String toString() {
@@ -68,11 +83,13 @@ class EpsonPrinterResponse {
         content: content ?? this.content,
       );
 
-  factory EpsonPrinterResponse.fromRawJson(String str) => EpsonPrinterResponse.fromJson(json.decode(str));
+  factory EpsonPrinterResponse.fromRawJson(String str) =>
+      EpsonPrinterResponse.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory EpsonPrinterResponse.fromJson(Map<String, dynamic> json) => EpsonPrinterResponse(
+  factory EpsonPrinterResponse.fromJson(Map<String, dynamic> json) =>
+      EpsonPrinterResponse(
         type: json["type"] == null ? null : json["type"],
         success: json["success"] == null ? null : json["success"],
         message: json["message"] == null ? null : json["message"],

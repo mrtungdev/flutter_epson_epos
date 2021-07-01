@@ -11,14 +11,13 @@ import android.util.Log
 import com.epson.epos2.Log as PrintLog;
 import com.google.gson.Gson
 import com.epson.epos2.Epos2Exception;
-//import com.epson.epos2.Log;
-import com.epson.epos2.discovery.DeviceInfo;
+//import com.epson.epos2.discovery.DeviceInfo;
 import com.epson.epos2.discovery.Discovery;
 import com.epson.epos2.discovery.DiscoveryListener;
 import com.epson.epos2.discovery.FilterOption;
 import com.epson.epos2.printer.Printer;
 import com.epson.epos2.printer.PrinterStatusInfo;
-import com.epson.epos2.printer.ReceiveListener;
+//import com.epson.epos2.printer.ReceiveListener;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -28,11 +27,11 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import java.lang.Exception
-import java.lang.StringBuilder
-import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.concurrent.schedule
 import android.util.Base64
+import android.R
+import java.lang.StringBuilder
+
 
 interface JSONConvertable {
   fun toJSON(): String = Gson().toJson(this)
@@ -223,19 +222,16 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         result.success(resp.toJSON())
       } else{
         commands.forEach {
-          onGenerateCommand(call, it)
+          onGenerateCommand(it)
         }
         try {
           val statusInfo: PrinterStatusInfo? = mPrinter!!.status;
           Log.d(logTag, "Printing $target $series Connection: ${statusInfo?.connection} online: ${statusInfo?.online} cover: ${statusInfo?.coverOpen} Paper: ${statusInfo?.paper} ErrorSt: ${statusInfo?.errorStatus} Battery Level: ${statusInfo?.batteryLevel}")
-//          mPrinter!!.addCut(Printer.CUT_FEED)
           mPrinter!!.sendData(Printer.PARAM_DEFAULT)
           Log.d(logTag, "Printed $target $series")
-          disconnectPrinter()
         } catch (ex: Exception) {
           ex.printStackTrace()
           Log.e(logTag, "sendData Error" + ex.localizedMessage)
-          disconnectPrinter()
         }
       }
     } catch (e: Exception) {
@@ -244,6 +240,90 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       resp.message = "Print error"
       result.success(resp.toJSON())
     }
+  }
+
+  private fun createReceiptData(): Boolean {
+    var method = ""
+    var textData: StringBuilder? = StringBuilder()
+    val barcodeWidth = 2
+    val barcodeHeight = 100
+    if (mPrinter == null) {
+      return false
+    }
+    try {
+      method = "addTextAlign"
+      mPrinter!!.addTextAlign(Printer.ALIGN_CENTER)
+      mPrinter!!.addFeedLine(1)
+      textData!!.append("THE STORE 123 (555) 555 – 5555\n")
+      textData.append("STORE DIRECTOR – John Smith\n")
+      textData.append("\n")
+      textData.append("7/01/07 16:58 6153 05 0191 134\n")
+      textData.append("ST# 21 OP# 001 TE# 01 TR# 747\n")
+      textData.append("------------------------------\n")
+      method = "addText"
+      mPrinter!!.addText(textData.toString())
+      textData.delete(0, textData.length)
+      textData.append("400 OHEIDA 3PK SPRINGF  9.99 R\n")
+      textData.append("410 3 CUP BLK TEAPOT    9.99 R\n")
+      textData.append("445 EMERIL GRIDDLE/PAN 17.99 R\n")
+      textData.append("438 CANDYMAKER ASSORT   4.99 R\n")
+      textData.append("474 TRIPOD              8.99 R\n")
+      textData.append("433 BLK LOGO PRNTED ZO  7.99 R\n")
+      textData.append("458 AQUA MICROTERRY SC  6.99 R\n")
+      textData.append("493 30L BLK FF DRESS   16.99 R\n")
+      textData.append("407 LEVITATING DESKTOP  7.99 R\n")
+      textData.append("441 **Blue Overprint P  2.99 R\n")
+      textData.append("476 REPOSE 4PCPM CHOC   5.49 R\n")
+      textData.append("461 WESTGATE BLACK 25  59.99 R\n")
+      textData.append("------------------------------\n")
+      method = "addText"
+      mPrinter!!.addText(textData.toString())
+      textData.delete(0, textData.length)
+      textData.append("SUBTOTAL                160.38\n")
+      textData.append("TAX                      14.43\n")
+      method = "addText"
+      mPrinter!!.addText(textData.toString())
+      textData.delete(0, textData.length)
+      method = "addTextSize"
+      mPrinter!!.addTextSize(2, 2)
+      method = "addText"
+      mPrinter!!.addText("TOTAL    174.81\n")
+      method = "addTextSize"
+      mPrinter!!.addTextSize(1, 1)
+      method = "addFeedLine"
+      mPrinter!!.addFeedLine(1)
+      textData.append("CASH                    200.00\n")
+      textData.append("CHANGE                   25.19\n")
+      textData.append("------------------------------\n")
+      method = "addText"
+      mPrinter!!.addText(textData.toString())
+      textData.delete(0, textData.length)
+      textData.append("Purchased item total number\n")
+      textData.append("Sign Up and Save !\n")
+      textData.append("With Preferred Saving Card\n")
+      method = "addText"
+      mPrinter!!.addText(textData.toString())
+      textData.delete(0, textData.length)
+      method = "addFeedLine"
+      mPrinter!!.addFeedLine(2)
+      method = "addBarcode"
+      mPrinter!!.addBarcode(
+        "01209457",
+        Printer.BARCODE_CODE39,
+        Printer.HRI_BELOW,
+        Printer.FONT_A,
+        barcodeWidth,
+        barcodeHeight
+      )
+      method = "addCut"
+      mPrinter!!.addCut(Printer.CUT_FEED)
+    } catch (e: Exception) {
+      mPrinter!!.clearCommandBuffer()
+
+      return false
+    }
+    textData = null
+    return true
   }
 
 
@@ -263,6 +343,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       mPrinter!!.connect(target, Printer.PARAM_DEFAULT)
     } catch (e: Exception) {
       Log.e(logTag, "Connect Error ${e.localizedMessage}", e)
+      disconnectPrinter()
       return false
     }
     return true
@@ -284,12 +365,12 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     mPrinter!!.clearCommandBuffer()
   }
 
-  private fun onGenerateCommand(call: MethodCall, command: Map<String, Any>) {
+  private fun onGenerateCommand(command: Map<String, Any>) {
     if (mPrinter == null) {
       return
     }
     Log.d(logTag, "onGenerateCommand: $command")
-//    val textData = StringBuilder()
+    val textData = StringBuilder()
 
     var commandId: String = command["id"] as String
     if (!commandId.isNullOrEmpty()) {
@@ -299,7 +380,9 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 
         "appendText" -> {
           Log.d(logTag, "appendText: $commandValue")
-          mPrinter!!.addText(commandValue.toString());
+          textData!!.append(commandValue.toString())
+          mPrinter!!.addText(textData.toString())
+          textData.delete(0, textData.length)
         }
         "addImage" -> {
           try {
@@ -313,7 +396,42 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
           } catch (e: Exception) {
             Log.e(logTag, "onGenerateCommand Error" + e.localizedMessage)
           }
-
+        }
+        "addFeedLine" -> {
+          mPrinter!!.addFeedLine(commandValue as Int)
+        }
+        "addCut" -> {
+          when(commandValue.toString()){
+            "CUT_FEED" -> {
+              mPrinter!!.addCut(Printer.CUT_FEED)
+            }
+            "CUT_NO_FEED" -> {
+              mPrinter!!.addCut(Printer.CUT_NO_FEED)
+            }
+            "CUT_RESERVE" -> {
+              mPrinter!!.addCut(Printer.CUT_RESERVE)
+            } else -> {
+              mPrinter!!.addCut(Printer.PARAM_DEFAULT)
+            }
+          }
+        }
+        "addLineSpace" -> {
+          mPrinter!!.addFeedLine(commandValue as Int)
+        }
+        "addTextAlign" -> {
+          when(commandValue.toString()){
+            "LEFT" -> {
+              mPrinter!!.addTextAlign(Printer.ALIGN_LEFT)
+            }
+            "CENTER" -> {
+              mPrinter!!.addTextAlign(Printer.ALIGN_CENTER)
+            }
+            "RIGHT" -> {
+              mPrinter!!.addTextAlign(Printer.ALIGN_RIGHT)
+            } else -> {
+              mPrinter!!.addTextAlign(Printer.PARAM_DEFAULT)
+            }
+          }
         }
       }
     }
