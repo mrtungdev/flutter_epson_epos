@@ -1,6 +1,6 @@
 // import 'enums.dart';
 
-class StarMicronicsCommand {
+class EpsonEPOSCommand {
   // String _enumText(dynamic enumName) {
   //   List<String> ns = enumName.toString().split('.');
   //   if (ns.length > 0) {
