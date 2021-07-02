@@ -1,3 +1,6 @@
+## 0.0.1+5
+
+- [Addroid] Fixed: Clear commands
 ## 0.0.1+4
 
 - [Addroid] Fixed: Cannot connect when printing multiple times.

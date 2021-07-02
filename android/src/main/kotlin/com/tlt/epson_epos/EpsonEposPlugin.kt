@@ -224,6 +224,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     var target = "${type}:${address}"
     var resp = EpsonEposPrinterResult("onPrint${type}", false)
     try {
+      mPrinter!!.clearCommandBuffer()
       if(!connectPrinter(target, series)){
         resp.success = false
         resp.message = "Can not connect to the printer."

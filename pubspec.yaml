@@ -1,6 +1,6 @@
 name: epson_epos
 description: This plugin allows Flutter apps to discover printers and send data to EPSON ePOS.
-version: 0.0.1+4
+version: 0.0.1+5
 repository: https://github.com/ImTung/flutter_epson_epos
 homepage: https://github.com/ImTung/flutter_epson_epos
 
