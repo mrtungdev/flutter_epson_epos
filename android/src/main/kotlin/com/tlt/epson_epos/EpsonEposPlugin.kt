@@ -30,6 +30,7 @@ import java.lang.Exception
 import kotlin.collections.ArrayList
 import android.util.Base64
 import android.R
+import com.epson.epos2.printer.ReceiveListener
 import java.lang.StringBuilder
 
 
@@ -64,6 +65,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private lateinit var context: Context
   private lateinit var activity: Activity
   private var mPrinter: Printer? = null
+  private var mTarget: String? = null
   private var printers: MutableList<Any> = ArrayList()
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -98,9 +100,15 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     channel.setMethodCallHandler(null)
   }
 
-  inner class MethodRunner(call: MethodCall, result: Result) : Runnable {
+  inner class MethodRunner(call: MethodCall, result: Result) : Runnable, ReceiveListener {
     private val call: MethodCall = call
     private val result: Result = result
+
+
+    override fun onPtrReceive(p0: Printer?, p1: Int, p2: PrinterStatusInfo?, p3: String?) {
+      Log.d(logTag, "${p0?.status} p2 $p2 p3 $p3")
+      disconnectPrinter()
+    }
 
     override fun run() {
       Log.d(logTag, "Method Called: ${call.method}")
@@ -189,7 +197,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       }, 7000)
 
     } catch (e: Exception) {
-      Log.e("OnDiscoveryTCP", "Start not working");
+      Log.e("OnDiscoveryTCP", "Start not working ${call.method}");
       e.printStackTrace()
       resp.success = false
       resp.message = "Error while search printer"
@@ -229,9 +237,10 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
           Log.d(logTag, "Printing $target $series Connection: ${statusInfo?.connection} online: ${statusInfo?.online} cover: ${statusInfo?.coverOpen} Paper: ${statusInfo?.paper} ErrorSt: ${statusInfo?.errorStatus} Battery Level: ${statusInfo?.batteryLevel}")
           mPrinter!!.sendData(Printer.PARAM_DEFAULT)
           Log.d(logTag, "Printed $target $series")
-        } catch (ex: Exception) {
+        } catch (ex: Epos2Exception) {
           ex.printStackTrace()
-          Log.e(logTag, "sendData Error" + ex.localizedMessage)
+          Log.e(logTag, "sendData Error" + ex.errorStatus, ex)
+          disconnectPrinter()
         }
       }
     } catch (e: Exception) {
@@ -241,91 +250,6 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       result.success(resp.toJSON())
     }
   }
-
-  private fun createReceiptData(): Boolean {
-    var method = ""
-    var textData: StringBuilder? = StringBuilder()
-    val barcodeWidth = 2
-    val barcodeHeight = 100
-    if (mPrinter == null) {
-      return false
-    }
-    try {
-      method = "addTextAlign"
-      mPrinter!!.addTextAlign(Printer.ALIGN_CENTER)
-      mPrinter!!.addFeedLine(1)
-      textData!!.append("THE STORE 123 (555) 555 – 5555\n")
-      textData.append("STORE DIRECTOR – John Smith\n")
-      textData.append("\n")
-      textData.append("7/01/07 16:58 6153 05 0191 134\n")
-      textData.append("ST# 21 OP# 001 TE# 01 TR# 747\n")
-      textData.append("------------------------------\n")
-      method = "addText"
-      mPrinter!!.addText(textData.toString())
-      textData.delete(0, textData.length)
-      textData.append("400 OHEIDA 3PK SPRINGF  9.99 R\n")
-      textData.append("410 3 CUP BLK TEAPOT    9.99 R\n")
-      textData.append("445 EMERIL GRIDDLE/PAN 17.99 R\n")
-      textData.append("438 CANDYMAKER ASSORT   4.99 R\n")
-      textData.append("474 TRIPOD              8.99 R\n")
-      textData.append("433 BLK LOGO PRNTED ZO  7.99 R\n")
-      textData.append("458 AQUA MICROTERRY SC  6.99 R\n")
-      textData.append("493 30L BLK FF DRESS   16.99 R\n")
-      textData.append("407 LEVITATING DESKTOP  7.99 R\n")
-      textData.append("441 **Blue Overprint P  2.99 R\n")
-      textData.append("476 REPOSE 4PCPM CHOC   5.49 R\n")
-      textData.append("461 WESTGATE BLACK 25  59.99 R\n")
-      textData.append("------------------------------\n")
-      method = "addText"
-      mPrinter!!.addText(textData.toString())
-      textData.delete(0, textData.length)
-      textData.append("SUBTOTAL                160.38\n")
-      textData.append("TAX                      14.43\n")
-      method = "addText"
-      mPrinter!!.addText(textData.toString())
-      textData.delete(0, textData.length)
-      method = "addTextSize"
-      mPrinter!!.addTextSize(2, 2)
-      method = "addText"
-      mPrinter!!.addText("TOTAL    174.81\n")
-      method = "addTextSize"
-      mPrinter!!.addTextSize(1, 1)
-      method = "addFeedLine"
-      mPrinter!!.addFeedLine(1)
-      textData.append("CASH                    200.00\n")
-      textData.append("CHANGE                   25.19\n")
-      textData.append("------------------------------\n")
-      method = "addText"
-      mPrinter!!.addText(textData.toString())
-      textData.delete(0, textData.length)
-      textData.append("Purchased item total number\n")
-      textData.append("Sign Up and Save !\n")
-      textData.append("With Preferred Saving Card\n")
-      method = "addText"
-      mPrinter!!.addText(textData.toString())
-      textData.delete(0, textData.length)
-      method = "addFeedLine"
-      mPrinter!!.addFeedLine(2)
-      method = "addBarcode"
-      mPrinter!!.addBarcode(
-        "01209457",
-        Printer.BARCODE_CODE39,
-        Printer.HRI_BELOW,
-        Printer.FONT_A,
-        barcodeWidth,
-        barcodeHeight
-      )
-      method = "addCut"
-      mPrinter!!.addCut(Printer.CUT_FEED)
-    } catch (e: Exception) {
-      mPrinter!!.clearCommandBuffer()
-
-      return false
-    }
-    textData = null
-    return true
-  }
-
 
   /// FUNCTIONS
 
@@ -337,13 +261,21 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 
   private fun connectPrinter(target: String, series: String): Boolean{
     var printCons = getPrinterConstant(series)
-    mPrinter = Printer(printCons, 0, context);
+    if(mPrinter == null || mTarget != target){
+      mPrinter = Printer(printCons, 0, context)
+      mTarget = target
+    }
     Log.d(logTag, "Connect Printer w $series constant: $printCons")
+
     try {
-      mPrinter!!.connect(target, Printer.PARAM_DEFAULT)
-    } catch (e: Exception) {
-      Log.e(logTag, "Connect Error ${e.localizedMessage}", e)
-      disconnectPrinter()
+      val statusInfo: PrinterStatusInfo? = mPrinter!!.status;
+      Log.d(logTag, "Printing $target $series Connection: ${statusInfo?.connection} online: ${statusInfo?.online} cover: ${statusInfo?.coverOpen} Paper: ${statusInfo?.paper} ErrorSt: ${statusInfo?.errorStatus} Battery Level: ${statusInfo?.batteryLevel}")
+      if(statusInfo?.connection == 0){
+        mPrinter!!.connect(target, Printer.PARAM_DEFAULT)
+      }
+    } catch (e: Epos2Exception) {
+//      var errCode = e.errorStatus
+      Log.e(logTag, "Connect Error ${e.errorStatus}", e)
       return false
     }
     return true
@@ -356,6 +288,8 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     while (true) {
       try {
         mPrinter!!.disconnect()
+        mPrinter = null
+        mTarget = null
         break
       } catch (e: Exception) {
         mPrinter!!.clearCommandBuffer()
@@ -380,7 +314,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 
         "appendText" -> {
           Log.d(logTag, "appendText: $commandValue")
-          textData!!.append(commandValue.toString())
+          textData.append(commandValue.toString())
           mPrinter!!.addText(textData.toString())
           textData.delete(0, textData.length)
         }

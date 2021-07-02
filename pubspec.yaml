@@ -1,6 +1,6 @@
 name: epson_epos
 description: Epson ePOS SDK for Flutter
-version: 0.0.1+3
+version: 0.0.1+4
 repository: https://github.com/ImTung/flutter_epson_epos
 homepage: https://github.com/ImTung/flutter_epson_epos
 
