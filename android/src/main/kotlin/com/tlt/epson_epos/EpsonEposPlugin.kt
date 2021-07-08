@@ -224,11 +224,11 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     var target = "${type}:${address}"
     var resp = EpsonEposPrinterResult("onPrint${type}", false)
     try {
-      mPrinter!!.clearCommandBuffer()
       if(!connectPrinter(target, series)){
         resp.success = false
         resp.message = "Can not connect to the printer."
         result.success(resp.toJSON())
+        mPrinter!!.clearCommandBuffer()
       } else{
         commands.forEach {
           onGenerateCommand(it)
@@ -274,6 +274,7 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       if(statusInfo?.connection == 0){
         mPrinter!!.connect(target, Printer.PARAM_DEFAULT)
       }
+      mPrinter!!.clearCommandBuffer()
     } catch (e: Epos2Exception) {
 //      var errCode = e.errorStatus
       Log.e(logTag, "Connect Error ${e.errorStatus}", e)
