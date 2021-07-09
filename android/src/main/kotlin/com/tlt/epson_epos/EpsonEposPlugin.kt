@@ -276,6 +276,8 @@ class EpsonEposPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       }
       mPrinter!!.clearCommandBuffer()
     } catch (e: Epos2Exception) {
+      mPrinter!!.clearCommandBuffer()
+      disconnectPrinter()
 //      var errCode = e.errorStatus
       Log.e(logTag, "Connect Error ${e.errorStatus}", e)
       return false
