@@ -31,8 +31,7 @@ class EpsonEPOSCommand {
     return {"id": "addTextAlign", "value": cutData};
   }
 
-  Map<String, dynamic> appendBitmap(
-      dynamic data, int width, int height, int posX, int posY) {
+  Map<String, dynamic> appendBitmap(dynamic data, int width, int height, int posX, int posY) {
     Map<String, dynamic> cmd = {"id": "addImage", "value": data};
     cmd['width'] = width;
     cmd['height'] = height;

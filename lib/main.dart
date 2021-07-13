@@ -14,14 +14,12 @@ class EpsonEPOS {
   static bool _isPrinterPlatformSupport({bool throwError = false}) {
     if (Platform.isAndroid) return true;
     if (throwError) {
-      throw PlatformException(
-          code: "platformNotSupported", message: "Device not supported");
+      throw PlatformException(code: "platformNotSupported", message: "Device not supported");
     }
     return false;
   }
 
-  static Future<List<EpsonPrinterModel>?> onDiscovery(
-      {EpsonEPOSPortType type = EpsonEPOSPortType.ALL}) async {
+  static Future<List<EpsonPrinterModel>?> onDiscovery({EpsonEPOSPortType type = EpsonEPOSPortType.ALL}) async {
     if (!_isPrinterPlatformSupport(throwError: true)) return null;
     String printType = _eposHelper.getPortType(type);
     final Map<String, dynamic> params = {"type": printType};
@@ -34,11 +32,7 @@ class EpsonEPOS {
           return prs.map((e) {
             final modelName = e['model'];
             final modelSeries = _eposHelper.getSeries(modelName);
-            return EpsonPrinterModel(
-                address: e['address'],
-                type: printType,
-                model: modelName,
-                series: modelSeries?.id);
+            return EpsonPrinterModel(address: e['address'], type: printType, model: modelName, series: modelSeries?.id);
           }).toList();
         }
       } catch (e) {
@@ -48,14 +42,25 @@ class EpsonEPOS {
     return [];
   }
 
-  static Future<dynamic> onPrint(
-      EpsonPrinterModel printer, List<Map<String, dynamic>> commands) async {
+  static Future<dynamic> onPrint(EpsonPrinterModel printer, List<Map<String, dynamic>> commands) async {
+    final Map<String, dynamic> params = {"address": printer.address, "type": printer.type, "series": printer.series, "commands": commands};
+    return await _channel.invokeMethod('onPrint', params);
+  }
+
+  static Future<dynamic> getPrinterSetting(EpsonPrinterModel printer) async {
+    final Map<String, dynamic> params = {"address": printer.address, "type": printer.type, "series": printer.series};
+    return await _channel.invokeMethod('getPrinterSetting', params);
+  }
+
+  static Future<dynamic> setPrinterSetting(EpsonPrinterModel printer, {int? paperWidth, int? printDensity, int? printSpeed}) async {
     final Map<String, dynamic> params = {
       "address": printer.address,
       "type": printer.type,
       "series": printer.series,
-      "commands": commands
+      "paper_width": paperWidth,
+      "print_density": printDensity,
+      "print_speed": printSpeed
     };
-    return await _channel.invokeMethod('onPrint', params);
+    return await _channel.invokeMethod('setPrinterSetting', params);
   }
 }

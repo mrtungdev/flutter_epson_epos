@@ -56,7 +56,8 @@ class _MyAppState extends State<MyApp> {
                       subtitle: Text('${printer.address}'),
                       trailing: TextButton(
                           onPressed: () {
-                            onPrintTest(printer);
+                            onSetPrinterSetting(printer);
+                            // onPrintTest(printer);
                           },
                           child: Text('Print Test')),
                     );
@@ -87,6 +88,14 @@ class _MyAppState extends State<MyApp> {
           printers = data;
         });
       }
+    } catch (e) {
+      log("Error: " + e.toString());
+    }
+  }
+
+  void onSetPrinterSetting(EpsonPrinterModel printer) async {
+    try {
+      await EpsonEPOS.setPrinterSetting(printer, paperWidth: 80);
     } catch (e) {
       log("Error: " + e.toString());
     }
