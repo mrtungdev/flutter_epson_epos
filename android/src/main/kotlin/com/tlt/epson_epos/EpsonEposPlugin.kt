@@ -164,21 +164,6 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
   }
 
-  class OnSettingListener(call: MethodCall, result: Result){
-    private val call: MethodCall = call
-    private val result: Result = result
-
-//    override fun onGetPrinterSetting(p0: Int, p1: Int, p2: Int) {
-//      TODO("Not yet implemented")
-//      Log.e("logTag", "onGetPrinterSetting type: $p0 $p1 $p2")
-//    }
-//
-//    override fun onSetPrinterSetting(p0: Int) {
-//      TODO("Not yet implemented")
-//      Log.e("logTag", "onSetPrinterSetting Code: $p0")
-//    }
-  }
-
   /**
    * Stop discovery printer
    */
@@ -307,7 +292,6 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
       }
     } catch (e: Exception) {
-
       e.printStackTrace()
       resp.success = false
       resp.message = "Print error"
@@ -362,13 +346,16 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   private val mDiscoveryListener = DiscoveryListener { deviceInfo ->
     Log.d(logTag, "Found: ${deviceInfo?.deviceName}")
-    var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress, deviceInfo.deviceName)
-    var printerIndex = printers.indexOfFirst { e -> e.address == deviceInfo.ipAddress }
-    if (printerIndex > -1) {
-      printers[printerIndex] = printer
-    } else {
-      printers.add(printer)
+    if(deviceInfo?.deviceName != null && deviceInfo?.deviceName != ""){
+      var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress, deviceInfo.deviceName)
+      var printerIndex = printers.indexOfFirst { e -> e.address == deviceInfo.ipAddress }
+      if (printerIndex > -1) {
+        printers[printerIndex] = printer
+      } else {
+        printers.add(printer)
+      }
     }
+
   }
 
   private val mPrinterSettingListener = object: PrinterSettingListener {
@@ -379,11 +366,6 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     override fun onSetPrinterSetting(p0: Int) {
       Log.e("logTag", "onSetPrinterSetting Code: $p0")
     }
-  }
-
-
-  private fun mPrinterSetting(list: PrinterSettingListener) {
-
   }
 
   private fun connectPrinter(target: String, series: String): Boolean {
@@ -404,12 +386,10 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         mPrinter!!.connect(target, Printer.PARAM_DEFAULT)
       }
       mPrinter!!.clearCommandBuffer()
-      Printer.SETTING_PAPERWIDTH_58_0
     } catch (e: Epos2Exception) {
-      mPrinter!!.clearCommandBuffer()
+      Log.e(logTag, "Connect Error ${e.errorStatus}", e)
       disconnectPrinter()
 //      var errCode = e.errorStatus
-      Log.e(logTag, "Connect Error ${e.errorStatus}", e)
       return false
     }
     return true
@@ -417,6 +397,7 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   private fun disconnectPrinter() {
     if (mPrinter == null) {
+      Log.d(logTag, "disconnectPrinter mPrinter null")
       return
     }
     while (true) {
@@ -426,6 +407,7 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         mTarget = null
         break
       } catch (e: Exception) {
+        Log.e(logTag, "disconnectPrinter Error ${e?.message}", e)
         mPrinter!!.clearCommandBuffer()
         throw e
       }

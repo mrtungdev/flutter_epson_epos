@@ -82,6 +82,7 @@ Coming soon!
         - [x]  addLineSpace
         - [x]  addCut
         - [x]  addTextAlign
+        - [x]  setPrinterSetting
 - iOS
 
     Not support yet

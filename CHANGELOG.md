@@ -1,3 +1,8 @@
+## 0.0.1+6
+
+- [Addroid] Added: setPrinterSetting
+- [Addroid] Fixed: Disconnect Printer
+
 ## 0.0.1+5
 
 - [Addroid] Fixed: Clear commands
