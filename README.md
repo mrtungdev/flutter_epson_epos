@@ -93,7 +93,5 @@ Coming soon!
 
 If you like my work, feel free to:
 
-- ⭐ this repository. And we will be happy together :)
+- ⭐ this repository.
 - <a title="Thanks for your support!" href="https://www.buymeacoffee.com/mrtung" target="_blank"><img src="https://res.cloudinary.com/dvujyxh7e/image/upload/c_thumb,w_140,g_face/v1596378474/default-orange_uthxgz.jpg" alt="Buy Me A Coffee"></a>
-
-Thanks a bunch for stopping by and supporting me!
