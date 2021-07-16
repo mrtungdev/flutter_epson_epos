@@ -1,3 +1,7 @@
+## 0.0.1+7
+
+- [Addroid] Added: Get error messages via Printer Status
+
 ## 0.0.1+6
 
 - [Addroid] Added: setPrinterSetting

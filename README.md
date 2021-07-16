@@ -83,6 +83,7 @@ Coming soon!
         - [x]  addCut
         - [x]  addTextAlign
         - [x]  setPrinterSetting
+        - [x]  Error Message via Printer Status
 - iOS
 
     Not support yet
