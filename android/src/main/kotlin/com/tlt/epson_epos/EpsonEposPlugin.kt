@@ -443,6 +443,7 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             var posY: Int = command["posY"] as Int
             val bitmap: Bitmap? = convertBase64toBitmap(commandValue as String)
             Log.d(logTag, "appendBitmap: $width x $height $posX $posY bitmap $bitmap")
+            Printer.SETTING_PAPERWIDTH_80_0
             mPrinter!!.addImage(
               bitmap,
               posX,
