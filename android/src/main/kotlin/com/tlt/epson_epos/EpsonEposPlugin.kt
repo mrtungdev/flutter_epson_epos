@@ -278,7 +278,7 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
           pw = if (paperWidth != 80 || paperWidth != 58 || paperWidth != 60) {
             80
           } else {
-            paperWidth;
+            paperWidth
           }
         }
         settingList[Printer.SETTING_PAPERWIDTH] = pw
@@ -290,6 +290,8 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
           resp.success = false
           resp.message = "Print error"
           result.success(resp.toJSON())
+        } finally {
+          disconnectPrinter()
         }
 
       }
@@ -385,6 +387,7 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
       if (status?.online != Printer.TRUE) {
         mPrinter!!.connect(target, Printer.PARAM_DEFAULT)
       }
+      mPrinter!!.clearCommandBuffer()
     } catch (e: Epos2Exception) {
       disconnectPrinter()
       Log.e(logTag, "Connect Error ${e.errorStatus}", e)
