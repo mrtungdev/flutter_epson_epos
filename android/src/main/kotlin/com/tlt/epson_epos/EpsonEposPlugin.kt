@@ -375,6 +375,7 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
           resp.success = true
           resp.message = "Printed $target $series"
+          Log.d(logTag, resp.toJSON())
           result.success(resp.toJSON());
         } catch (ex: Epos2Exception) {
           ex.printStackTrace()
