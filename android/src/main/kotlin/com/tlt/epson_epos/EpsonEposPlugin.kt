@@ -472,9 +472,12 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
 
         "printRawData" -> {
-          Log.d(logTag, "printRawData: $commandValue")
+          try{
+          Log.d(logTag, "printRawData")
           mPrinter!!.addCommand( commandValue as ByteArray)
-
+          } catch (e: Exception) {
+            Log.e(logTag, "onGenerateCommand Error" + e.localizedMessage)
+          }
         }
 
         "addImage" -> {
