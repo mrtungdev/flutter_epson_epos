@@ -74,7 +74,7 @@ Coming soon!
     - [ ]  Discovery
         - [x]  TCP
         - [ ]  Bluetooth
-        - [ ]  USB
+        - [x]  USB
     - [ ]  Print Function
         - [x]  addText
         - [x]  addImage
