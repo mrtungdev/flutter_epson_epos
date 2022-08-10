@@ -49,8 +49,18 @@ class _MyAppState extends State<MyApp> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  ElevatedButton(onPressed: onDiscoveryTCP, child: Text('Discovery TCP')),
-                  ElevatedButton(onPressed: onDiscoveryUSB, child: Text('Discovery USB')),
+                  ElevatedButton(
+                      onPressed: () => onDiscovery(EpsonEPOSPortType.TCP),
+                      child: Text('Discovery TCP')),
+                  ElevatedButton(
+                      onPressed: () => onDiscovery(EpsonEPOSPortType.USB),
+                      child: Text('Discovery USB')),
+                  ElevatedButton(
+                      onPressed: () => onDiscovery(EpsonEPOSPortType.BLUETOOTH),
+                      child: Text('Discovery Bluetooth')),
+                  ElevatedButton(
+                      onPressed: () => onDiscovery(EpsonEPOSPortType.ALL),
+                      child: Text('Discovery All')),
                 ],
               ),
               Flexible(
@@ -83,9 +93,9 @@ class _MyAppState extends State<MyApp> {
 
   buildPrinter() {}
 
-  onDiscoveryTCP() async {
+  onDiscovery(EpsonEPOSPortType type) async {
     try {
-      List<EpsonPrinterModel>? data = await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.TCP);
+      List<EpsonPrinterModel>? data = await EpsonEPOS.onDiscovery(type: type);
       if (data != null && data.length > 0) {
         data.forEach((element) {
           print(element.toJson());
@@ -93,21 +103,9 @@ class _MyAppState extends State<MyApp> {
         setState(() {
           printers = data;
         });
-      }
-    } catch (e) {
-      log("Error: " + e.toString());
-    }
-  }
-
-  onDiscoveryUSB() async {
-    try {
-      List<EpsonPrinterModel>? data = await EpsonEPOS.onDiscovery(type: EpsonEPOSPortType.USB);
-      if (data != null && data.length > 0) {
-        data.forEach((element) {
-          print(element.toJson());
-        });
+      } else {
         setState(() {
-          printers = data;
+          printers = [];
         });
       }
     } catch (e) {
@@ -128,17 +126,26 @@ class _MyAppState extends State<MyApp> {
     final generator = Generator(PaperSize.mm58, profile);
     List<int> bytes = [];
 
-    bytes += generator.text('Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
-    bytes += generator.text('Special 1: àÀ èÈ éÉ ûÛ üÜ çÇ ôÔ', styles: const PosStyles(codeTable: 'CP1252'));
-    bytes += generator.text('Special 2: blåbærgrød', styles: const PosStyles(codeTable: 'CP1252'));
+    bytes += generator.text(
+        'Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
+    bytes += generator.text('Special 1: àÀ èÈ éÉ ûÛ üÜ çÇ ôÔ',
+        styles: const PosStyles(codeTable: 'CP1252'));
+    bytes += generator.text('Special 2: blåbærgrød',
+        styles: const PosStyles(codeTable: 'CP1252'));
 
     bytes += generator.text('Bold text', styles: const PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: const PosStyles(reverse: true));
-    bytes += generator.text('Underlined text', styles: const PosStyles(underline: true), linesAfter: 1);
-    bytes += generator.text('Align left', styles: const PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center', styles: const PosStyles(align: PosAlign.center));
-    bytes += generator.text('Align right', styles: const PosStyles(align: PosAlign.right), linesAfter: 1);
-    bytes += generator.qrcode('Barcode by escpos', size: QRSize.Size4, cor: QRCorrection.H);
+    bytes +=
+        generator.text('Reverse text', styles: const PosStyles(reverse: true));
+    bytes += generator.text('Underlined text',
+        styles: const PosStyles(underline: true), linesAfter: 1);
+    bytes += generator.text('Align left',
+        styles: const PosStyles(align: PosAlign.left));
+    bytes += generator.text('Align center',
+        styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.text('Align right',
+        styles: const PosStyles(align: PosAlign.right), linesAfter: 1);
+    bytes += generator.qrcode('Barcode by escpos',
+        size: QRSize.Size4, cor: QRCorrection.H);
     bytes += generator.feed(2);
 
     bytes += generator.row([
@@ -166,7 +173,6 @@ class _MyAppState extends State<MyApp> {
         ));
 
     bytes += generator.reset();
-    bytes += generator.cut();
 
     return bytes;
   }

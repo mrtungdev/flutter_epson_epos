@@ -1,6 +1,7 @@
-import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
+
+import 'package:flutter/services.dart';
 
 import 'enums.dart';
 import 'helpers.dart';
@@ -29,9 +30,11 @@ class EpsonEPOS {
     if (rep != null) {
       try {
         final response = EpsonPrinterResponse.fromRawJson(rep);
-        print(rep);
 
-        List<dynamic> prs = response.content;
+        List<dynamic>? prs = response.content;
+        if (prs == null) {
+          return [];
+        }
         if (prs.length > 0) {
           return prs.map((e) {
             final modelName = e['model'];
@@ -46,6 +49,8 @@ class EpsonEPOS {
               target: e['target'],
             );
           }).toList();
+        } else {
+          return [];
         }
       } catch (e) {
         throw e;

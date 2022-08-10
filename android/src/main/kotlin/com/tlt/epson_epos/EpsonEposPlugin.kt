@@ -190,24 +190,35 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     Log.d(logTag, "onDiscovery type: $printType")
     when (printType) {
       "TCP" -> {
-        onDiscoveryTCP(call, result)
+        onDiscoveryPrinter(call, Discovery.PORTTYPE_TCP, result)
       }
-
       "USB" -> {
-        onDiscoveryUSB(call, result)
+        onDiscoveryPrinter(call, Discovery.PORTTYPE_USB, result)
+      }
+      "BT" -> {
+        onDiscoveryPrinter(call, Discovery.PORTTYPE_BLUETOOTH, result)
+      }
+      "ALL" -> {
+        onDiscoveryPrinter(call, Discovery.TYPE_PRINTER, result)
       }
       else -> result.notImplemented()
     }
   }
 
   /**
-   * Discovery Printers via TCP/IP
+   * Discovery Printers GENERIC
    */
-  private fun onDiscoveryTCP(@NonNull call: MethodCall, @NonNull result: Result) {
+  private fun onDiscoveryPrinter(@NonNull call: MethodCall, portType: Int, @NonNull result: Result) {
+    var delay:Long = 7000;
+    if(portType == Discovery.PORTTYPE_USB){
+      delay = 1000;
+    }
     printers.clear()
     var filter = FilterOption()
-    filter.portType = Discovery.PORTTYPE_TCP
-    var resp = EpsonEposPrinterResult("onDiscoveryTCP", false)
+    filter.portType = portType;
+    Log.e("onDiscoveryPrinter", "Filter = $portType");
+
+    var resp = EpsonEposPrinterResult("onDiscoveryPrinter", false)
     try {
       Discovery.start(context, filter, mDiscoveryListener)
       Handler(Looper.getMainLooper()).postDelayed({
@@ -216,42 +227,18 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         resp.content = printers
         result.success(resp.toJSON())
         stopDiscovery()
-      }, 7000)
+      }, delay)
     } catch (e: Exception) {
-      Log.e("OnDiscoveryTCP", "Start not working ${call.method}");
-      e.printStackTrace()
+      Log.e("onDiscoveryPrinter", "Start not working ${call.method}");
       resp.success = false
       resp.message = "Error while search printer"
+      e.printStackTrace()
       result.success(resp.toJSON())
     }
   }
 
 
-  /**
-   * Discovery Printers via TCP/IP
-   */
-  private fun onDiscoveryUSB(@NonNull call: MethodCall, @NonNull result: Result) {
-    printers.clear()
-    var filter = FilterOption()
-    filter.portType = Discovery.PORTTYPE_USB
-    var resp = EpsonEposPrinterResult("onDiscoveryUSB", false)
-    try {
-      Discovery.start(context, filter, mDiscoveryListener)
-      Handler(Looper.getMainLooper()).postDelayed({
-        resp.success = true
-        resp.message = "Successfully!"
-        resp.content = printers
-        result.success(resp.toJSON())
-        stopDiscovery()
-      }, 1000)
-    } catch (e: Exception) {
-      Log.e("OnDiscoveryTCP", "Start not working ${call.method}");
-      e.printStackTrace()
-      resp.success = false
-      resp.message = "Error while search printer"
-      result.success(resp.toJSON())
-    }
-  }
+
 
   private fun onGetPrinterInfo(@NonNull call: MethodCall, @NonNull result: Result) {
     Log.d(logTag, "onGetPrinterInfo $call $result")
