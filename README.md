@@ -6,8 +6,8 @@ This plugin allows Flutter apps to discover printers and send data to EPSON ePOS
 
 ## Platform Support
 
-- Android
-- iOS
+- [x]  Android
+- [ ]  iOS
 
 ## Compabilities
 
@@ -74,7 +74,7 @@ Coming soon!
     - [ ]  Discovery
         - [x]  TCP
         - [ ]  Bluetooth
-        - [ ]  USB
+        - [x]  USB
     - [ ]  Print Function
         - [x]  addText
         - [x]  addImage

@@ -1,3 +1,6 @@
+## 0.0.2
+
+- [Addroid] added USB Print. Special thanks @brasizza
 ## 0.0.1+7
 
 - [Addroid] Added: Get error messages via Printer Status
