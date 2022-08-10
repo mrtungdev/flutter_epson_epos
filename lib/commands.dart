@@ -1,4 +1,5 @@
 import 'enums.dart';
+import 'dart:typed_data';
 
 class EpsonEPOSCommand {
   String _enumText(dynamic enumName) {
@@ -11,6 +12,10 @@ class EpsonEPOSCommand {
 
   Map<String, dynamic> append(dynamic data) {
     return {"id": "appendText", "value": data};
+  }
+
+  Map<String, dynamic> rawData(Uint8List data) {
+    return {"id": "printRawData", "value": data};
   }
 
   Map<String, dynamic> addFeedLine(dynamic data) {
@@ -31,7 +36,8 @@ class EpsonEPOSCommand {
     return {"id": "addTextAlign", "value": cutData};
   }
 
-  Map<String, dynamic> appendBitmap(dynamic data, int width, int height, int posX, int posY) {
+  Map<String, dynamic> appendBitmap(
+      dynamic data, int width, int height, int posX, int posY) {
     Map<String, dynamic> cmd = {"id": "addImage", "value": data};
     cmd['width'] = width;
     cmd['height'] = height;

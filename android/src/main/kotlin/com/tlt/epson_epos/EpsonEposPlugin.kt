@@ -13,6 +13,7 @@ import com.google.gson.Gson
 import com.epson.epos2.Epos2Exception;
 import com.epson.epos2.discovery.Discovery;
 import com.epson.epos2.discovery.DiscoveryListener;
+import com.epson.epos2.discovery.DeviceInfo;
 import com.epson.epos2.discovery.FilterOption;
 import com.epson.epos2.printer.Printer;
 import com.epson.epos2.printer.PrinterStatusInfo;
@@ -39,11 +40,15 @@ interface JSONConvertable {
 
 inline fun <reified T : JSONConvertable> String.toObject(): T = Gson().fromJson(this, T::class.java)
 
+
 class EpsonEposPrinterInfo(
-  var address: String? = null,
+  var ipAddress: String? = null,
+  var bdAddress: String? = null,
+  var macAddress: String? = null,
   var model: String? = null,
   var type: String? = null,
-  var printType: String? = null
+  var printType: String? = null,
+  var target: String? =null
 ) : JSONConvertable
 
 data class EpsonEposPrinterResult(
@@ -187,6 +192,10 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
       "TCP" -> {
         onDiscoveryTCP(call, result)
       }
+
+      "USB" -> {
+        onDiscoveryUSB(call, result)
+      }
       else -> result.notImplemented()
     }
   }
@@ -217,6 +226,33 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     }
   }
 
+
+  /**
+   * Discovery Printers via TCP/IP
+   */
+  private fun onDiscoveryUSB(@NonNull call: MethodCall, @NonNull result: Result) {
+    printers.clear()
+    var filter = FilterOption()
+    filter.portType = Discovery.PORTTYPE_USB
+    var resp = EpsonEposPrinterResult("onDiscoveryUSB", false)
+    try {
+      Discovery.start(context, filter, mDiscoveryListener)
+      Handler(Looper.getMainLooper()).postDelayed({
+        resp.success = true
+        resp.message = "Successfully!"
+        resp.content = printers
+        result.success(resp.toJSON())
+        stopDiscovery()
+      }, 1000)
+    } catch (e: Exception) {
+      Log.e("OnDiscoveryTCP", "Start not working ${call.method}");
+      e.printStackTrace()
+      resp.success = false
+      resp.message = "Error while search printer"
+      result.success(resp.toJSON())
+    }
+  }
+
   private fun onGetPrinterInfo(@NonNull call: MethodCall, @NonNull result: Result) {
     Log.d(logTag, "onGetPrinterInfo $call $result")
   }
@@ -227,10 +263,11 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   private fun getPrinterSetting(@NonNull call: MethodCall, @NonNull result: Result) {
     Log.d(logTag, "getPrinterSetting $call $result")
-    val address: String = call.argument<String>("address") as String
+
     val type: String = call.argument<String>("type") as String
     val series: String = call.argument<String>("series") as String
-    var target = "${type}:${address}"
+    val target: String = call.argument<String>("target") as String
+
     var resp = EpsonEposPrinterResult("onPrint${type}", false)
     try {
       if (!connectPrinter(target, series)) {
@@ -253,15 +290,15 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   private fun setPrinterSetting(@NonNull call: MethodCall, @NonNull result: Result) {
     Log.d(logTag, "setPrinterSetting $call $result")
-    val address: String = call.argument<String>("address") as String
+
     val type: String = call.argument<String>("type") as String
     val series: String = call.argument<String>("series") as String
+    val target: String = call.argument<String>("target") as String
 
     val paperWidth: Int? = call.argument<String>("paper_width") as? Int
     val printDensity: Int? = call.argument<String>("print_density") as? Int
     val printSpeed: Int? = call.argument<String>("print_speed") as? Int
 
-    var target = "${type}:${address}"
     var resp = EpsonEposPrinterResult("onPrint${type}", false)
     try {
       if (!connectPrinter(target, series)) {
@@ -307,12 +344,12 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
    * Print
    */
   private fun onPrint(@NonNull call: MethodCall, @NonNull result: Result) {
-    val address: String = call.argument<String>("address") as String
     val type: String = call.argument<String>("type") as String
     val series: String = call.argument<String>("series") as String
+    val target: String = call.argument<String>("target") as String
+
     val commands: ArrayList<Map<String, Any>> =
       call.argument<ArrayList<Map<String, Any>>>("commands") as ArrayList<Map<String, Any>>
-    var target = "${type}:${address}"
     var resp = EpsonEposPrinterResult("onPrint${type}", false)
     try {
       if (!connectPrinter(target, series)) {
@@ -335,6 +372,11 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
           )
           mPrinter!!.sendData(Printer.PARAM_DEFAULT)
           Log.d(logTag, "Printed $target $series")
+
+          resp.success = true
+          resp.message = "Printed $target $series"
+          Log.d(logTag, resp.toJSON())
+          result.success(resp.toJSON());
         } catch (ex: Epos2Exception) {
           ex.printStackTrace()
           Log.e(logTag, "sendData Error" + ex.errorStatus, ex)
@@ -354,8 +396,8 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
   private val mDiscoveryListener = DiscoveryListener { deviceInfo ->
     Log.d(logTag, "Found: ${deviceInfo?.deviceName}")
     if (deviceInfo?.deviceName != null && deviceInfo?.deviceName != "") {
-      var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress, deviceInfo.deviceName)
-      var printerIndex = printers.indexOfFirst { e -> e.address == deviceInfo.ipAddress }
+      var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress,  deviceInfo.bdAddress , deviceInfo.macAddress,  deviceInfo.deviceName , deviceInfo.deviceType.toString(), deviceInfo.deviceType.toString()  , deviceInfo.target)
+      var printerIndex = printers.indexOfFirst { e -> e.ipAddress == deviceInfo.ipAddress }
       if (printerIndex > -1) {
         printers[printerIndex] = printer
       } else {
@@ -431,10 +473,18 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
         "appendText" -> {
           Log.d(logTag, "appendText: $commandValue")
-          textData.append(commandValue.toString())
-          mPrinter!!.addText(textData.toString())
-          textData.delete(0, textData.length)
+          mPrinter!!.addText(commandValue.toString());
         }
+
+        "printRawData" -> {
+          try{
+          Log.d(logTag, "printRawData")
+          mPrinter!!.addCommand( commandValue as ByteArray)
+          } catch (e: Exception) {
+            Log.e(logTag, "onGenerateCommand Error" + e.localizedMessage)
+          }
+        }
+
         "addImage" -> {
           try {
             var width: Int = command["width"] as Int

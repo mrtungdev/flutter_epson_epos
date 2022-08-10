@@ -21,7 +21,8 @@ final List<EPSONSeries> epsonSeries = [
     "TM-T20II-i",
     "TM-T20III",
     "TM-T20IIIL",
-    "TM-T20X"
+    "TM-T20X",
+    "TM Printer",
   ]),
   EPSONSeries(id: "TM_T60", models: ["TM-T60"]),
   EPSONSeries(id: "TM_T70", models: [
