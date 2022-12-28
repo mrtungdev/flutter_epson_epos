@@ -548,6 +548,82 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             }
           }
         }
+        "addTextFont" -> {
+          when (commandValue.toString()) {
+            "FONT_A" -> {
+              mPrinter!!.addTextFont(Printer.FONT_A)
+            }
+            "FONT_B" -> {
+              mPrinter!!.addTextFont(Printer.FONT_B)
+            }
+            "FONT_C" -> {
+              mPrinter!!.addTextFont(Printer.FONT_C)
+            }
+            "FONT_D" -> {
+              mPrinter!!.addTextFont(Printer.FONT_D)
+            }
+            "FONT_E" -> {
+              mPrinter!!.addTextFont(Printer.FONT_E)
+            }
+          }
+        }
+        "addTextSmooth" -> {
+          if (commandValue as Boolean) {
+            mPrinter!!.addTextSmooth(Printer.TRUE)
+          } else {
+            mPrinter!!.addTextSmooth(Printer.FALSE)
+          }
+        }
+        "addTextSize" -> {
+          val width = command["width"] as Int
+          val height = command["height"] as Int
+          Log.d(logTag, "setTextSize: width: $width, height: $height")
+          mPrinter!!.addTextSize(width, height)
+        }
+        "addTextStyle" -> {
+          val reverse = command["reverse"] as Boolean?
+          val ul = command["ul"] as Boolean?
+          val em = command["em"] as Boolean?
+          val color = command["color"] as String?
+
+          val reverseValue = if (reverse != null) {
+            if (reverse) {
+              Printer.TRUE
+            } else
+              Printer.FALSE
+          } else {
+            Printer.PARAM_DEFAULT
+          }
+
+          val ulValue = if (ul != null) {
+            if (ul) {
+              Printer.TRUE
+            } else
+              Printer.FALSE
+          } else {
+            Printer.PARAM_DEFAULT
+          }
+
+          val emValue = if (em != null) {
+            if (em) {
+              Printer.TRUE
+            } else
+              Printer.FALSE
+          } else {
+            Printer.PARAM_DEFAULT
+          }
+
+          val colorValue = when(color) {
+            "COLOR_NONE" -> Printer.COLOR_NONE
+            "COLOR_1" -> Printer.COLOR_1
+            "COLOR_2" -> Printer.COLOR_2
+            "COLOR_3" -> Printer.COLOR_3
+            "COLOR_4" -> Printer.COLOR_4
+            else -> Printer.PARAM_DEFAULT
+          }
+
+          mPrinter!!.addTextStyle(reverseValue, ulValue, emValue, colorValue)
+        }
       }
     }
   }
