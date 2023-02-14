@@ -46,4 +46,28 @@ class EpsonEPOSCommand {
 
     return cmd;
   }
+
+  Map<String, dynamic> addTextFont(EpsonEPOSFont data) {
+    final cutData = _enumText(data);
+    return {"id": "addTextFont", "value": cutData};
+  }
+
+  Map<String, dynamic> addTextSmooth(bool data) {
+    return {"id": "addTextSmooth", "value": data};
+  }
+
+  Map<String, dynamic> addTextSize(int width, int height) {
+    return {"id": "addTextSize", "width": width, "height": height};
+  }
+
+  Map<String, dynamic> addTextStyle(
+      {bool? reverse, bool? underline, bool? bold, EpsonEPOSColor? color}) {
+    return {
+      "id": "addTextStyle",
+      "reverse": reverse,
+      "ul": underline,
+      "em": bold,
+      "color": color?.name,
+    };
+  }
 }

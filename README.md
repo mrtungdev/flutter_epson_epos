@@ -84,6 +84,10 @@ Coming soon!
         - [x]  addTextAlign
         - [x]  setPrinterSetting
         - [x]  Error Message via Printer Status
+        - [x]  addTextFont
+        - [x]  addTextSmooth
+        - [x]  addTextSize
+        - [x]  addTextStyle
 - iOS
 
     Not support yet
