@@ -395,15 +395,20 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   private val mDiscoveryListener = DiscoveryListener { deviceInfo ->
     Log.d(logTag, "Found: ${deviceInfo?.deviceName}")
-    if (deviceInfo?.deviceName != null && deviceInfo?.deviceName != "") {
-      var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress,  deviceInfo.bdAddress , deviceInfo.macAddress,  deviceInfo.deviceName , deviceInfo.deviceType.toString(), deviceInfo.deviceType.toString()  , deviceInfo.target)
-      var printerIndex = printers.indexOfFirst { e -> e.ipAddress == deviceInfo.ipAddress }
-      if (printerIndex > -1) {
-        printers[printerIndex] = printer
-      } else {
-        printers.add(printer)
-      }
-    }
+
+    //Increase connection support
+    var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress,  deviceInfo.bdAddress , deviceInfo.macAddress,  deviceInfo.deviceName , deviceInfo.deviceType.toString(), deviceInfo.deviceType.toString()  , deviceInfo.target)
+    printers.add(printer)
+    
+    // if (deviceInfo?.deviceName != null && deviceInfo?.deviceName != "") {
+    //   var printer = EpsonEposPrinterInfo(deviceInfo.ipAddress,  deviceInfo.bdAddress , deviceInfo.macAddress,  deviceInfo.deviceName , deviceInfo.deviceType.toString(), deviceInfo.deviceType.toString()  , deviceInfo.target)
+    //   var printerIndex = printers.indexOfFirst { e -> e.ipAddress == deviceInfo.ipAddress }
+    //   if (printerIndex > -1) {
+    //     printers[printerIndex] = printer
+    //   } else {
+    //     printers.add(printer)
+    //   }
+    // }
 
   }
 

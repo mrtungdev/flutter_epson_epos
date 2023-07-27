@@ -50,7 +50,8 @@ final List<EPSONSeries> epsonSeries = [
     "TM-T88V-i",
     "TM-T88VI- iHUB",
     "TM-T88V-DT",
-    "TM-T88VI-DT2"
+    "TM-T88VI-DT2",
+    "TM-T88VII"
   ]),
   EPSONSeries(id: "TM_T90", models: ["TM-T90"]),
   EPSONSeries(id: "TM_T100", models: ["TM-T100"]),
