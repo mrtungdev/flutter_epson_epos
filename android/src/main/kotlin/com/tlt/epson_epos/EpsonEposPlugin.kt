@@ -371,6 +371,7 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
             "Printing $target $series Connection: ${statusInfo?.connection} online: ${statusInfo?.online} cover: ${statusInfo?.coverOpen} Paper: ${statusInfo?.paper} ErrorSt: ${statusInfo?.errorStatus} Battery Level: ${statusInfo?.batteryLevel}"
           )
           mPrinter!!.sendData(Printer.PARAM_DEFAULT)
+          mPrinter!!.clearCommandBuffer()
           Log.d(logTag, "Printed $target $series")
 
           resp.success = true
@@ -385,7 +386,7 @@ class EpsonEposPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
           try {
             disconnectPrinter()
           } catch (e: Exception){
-             Log.e(logTag, "Disconect Priente Error" + e.errorStatus, e)
+             Log.e(logTag, "Disconect Priente Error" + e.printStackTrace(), e)
           }
         }
       }

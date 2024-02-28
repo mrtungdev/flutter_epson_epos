@@ -3,6 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/epson_epos.iml" filepath="$PROJECT_DIR$/.idea/modules/epson_epos.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/epson_epos.androidTest.iml" filepath="$PROJECT_DIR$/.idea/modules/epson_epos.androidTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/epson_epos.main.iml" filepath="$PROJECT_DIR$/.idea/modules/epson_epos.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/epson_epos.unitTest.iml" filepath="$PROJECT_DIR$/.idea/modules/epson_epos.unitTest.iml" />
     </modules>
   </component>
 </project>
